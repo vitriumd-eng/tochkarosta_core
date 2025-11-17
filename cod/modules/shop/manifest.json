@@ -1,0 +1,36 @@
+{
+  "id": "shop",
+  "name": "shop",
+  "displayName": "Online Shop",
+  "description": "Модуль интернет-магазина с управлением товарами, заказами и корзиной",
+  "version": "1.0.0",
+  "backend": {
+    "entry": "backend/app/main.py",
+    "port": 8001
+  },
+  "frontend": {
+    "basePath": "/shop",
+    "entry": "frontend/app/page.tsx"
+  },
+  "database": {
+    "type": "postgres",
+    "urlVariable": "MODULE_DATABASE_URL"
+  },
+  "dependencies": [],
+  "themes": ["default"],
+  "publicRoutes": [
+    "/",
+    "/catalog",
+    "/product/:id",
+    "/cart"
+  ],
+  "dashboardRoutes": [
+    "/admin/products",
+    "/admin/orders",
+    "/admin/settings"
+  ],
+  "defaultTheme": "default"
+}
+
+
+

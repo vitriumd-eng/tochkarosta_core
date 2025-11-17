@@ -1,0 +1,4 @@
+"""
+Shop Module Backend Application
+"""
+

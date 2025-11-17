@@ -1,0 +1,62 @@
+# Docker Compose для локальной разработки
+# Использование: docker-compose -f docker-compose.local.yml up
+
+version: '3.8'
+
+services:
+  # PostgreSQL для core backend
+  postgres-core:
+    image: postgres:15-alpine
+    container_name: tochkarosta-postgres-core
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: tochkarosta_core
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-core-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PostgreSQL для shop module
+  postgres-shop:
+    image: postgres:15-alpine
+    container_name: tochkarosta-postgres-shop
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: shop_module
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-shop-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis (опционально)
+  redis:
+    image: redis:7-alpine
+    container_name: tochkarosta-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres-core-data:
+  postgres-shop-data:
+  redis-data:
+
+

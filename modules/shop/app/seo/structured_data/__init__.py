@@ -1,0 +1,4 @@
+"""SEO structured data"""
+
+
+

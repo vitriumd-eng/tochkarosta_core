@@ -1,0 +1,24 @@
+{
+  "problem_id": "dev-server-startup-issue",
+  "title": "Проблема с запуском dev серверов (Next.js и FastAPI)",
+  "description": "При попытке открыть страницу платформы браузер показывал ошибку chrome-error://chromewebdata/. Сервисы (Frontend на порту 7000 и Backend на порту 8000) не были запущены.",
+  "symptoms": [
+    "Браузер показывает chrome-error://chromewebdata/",
+    "Порты 7000 и 8000 свободны (нет активных соединений)",
+    "HTTP запросы к localhost:7000 и localhost:8000 не проходят (connection refused)"
+  ],
+  "environment": {
+    "os": "Windows",
+    "shell": "PowerShell",
+    "services": ["Next.js Frontend (порт 7000)", "FastAPI Backend (порт 8000)"]
+  },
+  "root_cause": [
+    "Сервисы не были запущены вообще",
+    "Попытки запустить через Start-Job не работают для долгоживущих процессов (dev серверы)",
+    "Start-Process с -WindowStyle Minimized также не подходит для интерактивных процессов"
+  ],
+  "date": "2024-12-19",
+  "status": "resolved"
+}
+
+
