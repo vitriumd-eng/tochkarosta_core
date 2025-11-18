@@ -109,7 +109,6 @@ async def platform_login(data: LoginRequest):
             raise
         except Exception as db_conn_error:
             logger.error(f"[PLATFORM_LOGIN] Database connection error: {type(db_conn_error).__name__}: {db_conn_error}", exc_info=True)
-            print(f"[PLATFORM_LOGIN ERROR] Database connection error: {type(db_conn_error).__name__}: {db_conn_error}", file=sys.stderr)
             raise HTTPException(
                 status_code=500,
                 detail=f"Database connection error: {str(db_conn_error)}"

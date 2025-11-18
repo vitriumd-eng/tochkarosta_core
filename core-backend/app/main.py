@@ -26,6 +26,15 @@ async def lifespan(app: FastAPI):
     """Lifespan event handler for startup and shutdown"""
     # Startup
     try:
+        # Initialize database connection pool first
+        from app.db.session import init_db_pool
+        await init_db_pool()
+        logger.info("Database connection pool initialized")
+    except Exception as e:
+        logger.error(f"Failed to initialize database pool at startup: {e}", exc_info=True)
+        # Don't raise - let the app start, but log the error
+    
+    try:
         from app.utils.module_loader import sync_modules_to_registry
         count = await sync_modules_to_registry()
         logger.info(f"Loaded {count} modules from disk to registry")
@@ -93,9 +102,10 @@ app.add_middleware(
 )
 
 # Include routers from v1
-from app.api.v1.routes import auth, tenants, subscriptions, modules, platform, users, super_admin, dev
+from app.api.v1.routes import auth, auth_oauth, tenants, subscriptions, modules, platform, users, super_admin, dev
 
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
+app.include_router(auth_oauth.router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
 app.include_router(tenants.router, prefix="/api/v1/tenants", tags=["tenants"])
 app.include_router(subscriptions.router, prefix="/api/v1/subscriptions", tags=["subscriptions"])
@@ -117,5 +127,20 @@ async def health():
 
 if __name__ == "__main__":
     from app.core.config import settings
-    uvicorn.run("app.main:app", host=settings.HOST, port=settings.PORT, reload=True)
+    # Exclude frequently accessed files from reload to prevent aggressive WatchFiles issues
+    # These files are often opened by Cursor/IDE and trigger unnecessary reloads
+    # Uvicorn accepts multiple --reload-exclude, each with ONE parameter (path/mask)
+    reload_excludes = [
+        "app/api/v1/routes/auth.py",
+        "app/services/*",
+        "app/db/*",
+        "app/middleware/*"
+    ]
+    uvicorn.run(
+        "app.main:app",
+        host=settings.HOST,
+        port=settings.PORT,
+        reload=True,
+        reload_excludes=reload_excludes
+    )
 

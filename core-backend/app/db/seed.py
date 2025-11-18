@@ -6,6 +6,9 @@ from sqlalchemy import select
 from app.models.user import User
 from app.models.roles import UserRole
 from app.utils.hashing import hash_password
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 async def seed_platform_master(session: AsyncSession):
@@ -23,7 +26,7 @@ async def seed_platform_master(session: AsyncSession):
 
     existing = await session.scalar(select(User).where(User.phone == phone))
     if existing:
-        print("platform_master already exists")
+        logger.info("platform_master already exists")
         return existing
 
     user = User(
@@ -37,6 +40,6 @@ async def seed_platform_master(session: AsyncSession):
     session.add(user)
     await session.commit()
     await session.refresh(user)
-    print(f"platform_master created: {user.id}")
+    logger.info(f"platform_master created: {user.id}")
     return user
 

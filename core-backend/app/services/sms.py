@@ -6,6 +6,9 @@ from typing import Optional
 import random
 import hashlib
 import time
+import logging
+
+logger = logging.getLogger(__name__)
 
 # In-memory OTP storage (in production, use Redis)
 _otp_storage: dict = {}
@@ -29,8 +32,8 @@ class SMSService:
         }
         
         # TODO: Integrate with actual SMS provider (Twilio, etc.)
-        # For now, print to console (development only)
-        print(f"[SMS] OTP for {phone}: {otp}")
+        # For now, log to console (development only)
+        logger.info(f"[SMS] OTP for {phone}: {otp}")
         
         return True
     

@@ -30,6 +30,13 @@ class Settings(BaseSettings):
     
     # Environment
     ENVIRONMENT: str = "development"
+    DEV_MODE: bool = True  # Local development mode - codes logged to console, not sent
+    
+    # SMS/OTP Providers
+    SMS_PROVIDER: str = "mock"  # mock, sms_ru, twilio, etc.
+    TELEGRAM_ACTIVE: bool = False  # Disable Telegram in dev mode
+    MAX_ACTIVE: bool = False  # Disable MAX in dev mode
+    VK_ACTIVE: bool = False  # Disable VK in dev mode
     
     @property
     def cors_origins_list(self) -> list[str]:

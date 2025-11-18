@@ -24,7 +24,8 @@ class TenantService:
         self,
         owner_id: uuid.UUID,
         name: str,
-        db: Optional[AsyncSession] = None
+        db: Optional[AsyncSession] = None,
+        user: Optional[User] = None
     ) -> Tenant:
         """
         Create new tenant (without plan, status, or active_module)
@@ -33,6 +34,7 @@ class TenantService:
             owner_id: User UUID (tenant owner)
             name: Tenant name
             db: Optional database session (if provided, operation is part of larger transaction)
+            user: Optional User object (if provided, skips database query)
         
         Returns:
             Created Tenant object
@@ -41,14 +43,20 @@ class TenantService:
         # Otherwise, create new session
         if db is None:
             async with AsyncSessionLocal() as session:
-                return await self.create_tenant(owner_id, name, session)
+                return await self.create_tenant(owner_id, name, session, user)
         
-        # Get user for owner_phone
-        user_stmt = select(User).where(User.id == owner_id)
-        user_result = await db.execute(user_stmt)
-        user = user_result.scalar_one_or_none()
+        # Get user for owner_phone (skip if user is provided)
+        if user is None:
+            # Try to get user from session identity map first (for uncommitted objects)
+            user = db.identity_map.get(User, owner_id)
+            if user is None:
+                user_stmt = select(User).where(User.id == owner_id)
+                user_result = await db.execute(user_stmt)
+                user = user_result.scalar_one_or_none()
         
         if not user:
+            # Log for debugging
+            logger.error(f"User not found: {owner_id}. Session identity map: {list(db.identity_map.keys()) if hasattr(db, 'identity_map') else 'N/A'}")
             raise ValueError(f"User not found: {owner_id}")
         
         # Create new tenant

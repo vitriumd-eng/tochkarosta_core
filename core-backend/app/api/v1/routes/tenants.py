@@ -3,6 +3,8 @@ Tenants API - Tenant information endpoints
 Uses SQLAlchemy ORM for all database operations
 """
 from fastapi import APIRouter, HTTPException, Request
+from pydantic import BaseModel
+from typing import Optional
 from sqlalchemy import select, func
 from app.services.tenant import TenantService
 from app.modules.registry import get_module_manifest
@@ -14,11 +16,33 @@ router = APIRouter()
 tenant_service = TenantService()
 
 
-@router.get("/by-subdomain/{subdomain}")
+class TenantBySubdomainResponse(BaseModel):
+    """Response schema for get_tenant_by_subdomain"""
+    tenant_id: str
+    tenant_name: str
+    subdomain: str
+    status: str
+    is_active: bool
+    is_frozen: bool
+    active_module: Optional[str]
+    module_info: Optional[dict]
+
+
+@router.get("/by-subdomain/{subdomain}", response_model=TenantBySubdomainResponse)
 async def get_tenant_by_subdomain(subdomain: str):
     """
     Get tenant and module info by subdomain
     Used by frontend to determine which module to load
+    
+    Returns:
+        - tenant_id: UUID of the tenant
+        - tenant_name: Name of the tenant
+        - subdomain: Subdomain string
+        - status: Tenant status (active/inactive)
+        - is_active: Whether domain is active
+        - is_frozen: Whether domain is frozen
+        - active_module: ID of active module (if any)
+        - module_info: Module manifest information (if active_module exists)
     """
     async with AsyncSessionLocal() as db:
         # Find tenant domain by subdomain

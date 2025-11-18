@@ -12,13 +12,16 @@
  * - Интерактивные компоненты имеют 'use client'
  * - Главная страница серверная (без 'use client')
  */
+import { Header } from '@/components/platform/Header'
 import { Hero } from '@/components/platform/Hero'
 import { HeroMedia } from '@/components/platform/HeroMedia'
 import { Stats } from '@/components/platform/Stats'
 import { Features } from '@/components/platform/Features'
 import { WhyChoose } from '@/components/platform/WhyChoose'
 import { Pricing } from '@/components/platform/Pricing'
+import { Roadmap } from '@/components/platform/Roadmap'
 import { CTA } from '@/components/platform/CTA'
+import { Footer } from '@/components/platform/Footer'
 
 export default async function PlatformPage() {
   return (
@@ -28,13 +31,16 @@ export default async function PlatformPage() {
         fontFamily: "'PF BeauSans Pro', 'Montserrat', sans-serif"
       }}
     >
+      <Header />
       <Hero />
       <HeroMedia />
       <Stats />
       <Features />
       <WhyChoose />
       <Pricing />
+      <Roadmap />
       <CTA />
+      <Footer />
     </div>
   )
 }

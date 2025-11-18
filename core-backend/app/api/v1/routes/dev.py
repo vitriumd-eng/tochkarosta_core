@@ -70,3 +70,60 @@ async def save_tenant_id(request: SaveTenantIdRequest):
         raise HTTPException(status_code=500, detail=f"Failed to save tenant_id: {str(e)}")
 
 
+class GetCodeRequest(BaseModel):
+    """Request to get last generated code (dev mode only)"""
+    phone: str
+    provider: str
+
+
+@router.post("/get-last-code")
+async def get_last_code(request: GetCodeRequest):
+    """
+    Get last generated verification code (dev mode only)
+    This allows testing without checking console logs
+    """
+    is_dev_mode = os.getenv("ENVIRONMENT", "development").lower() != "production"
+    
+    if not is_dev_mode:
+        raise HTTPException(status_code=403, detail="This endpoint is only available in development mode")
+    
+    try:
+        from app.services.verification import VerificationService
+        
+        verification_service = VerificationService()
+        code_info = await verification_service.get_code_info(request.provider, request.phone)
+        
+        if not code_info:
+            return {
+                "success": False,
+                "message": "No code found for this phone and provider",
+                "phone": request.phone,
+                "provider": request.provider
+            }
+        
+        # Get actual code from storage (dev only!)
+        from app.services.verification import _verification_storage
+        key = f"verification:{request.provider}:{request.phone}"
+        stored = _verification_storage.get(key)
+        
+        if not stored:
+            return {
+                "success": False,
+                "message": "Code not found in storage",
+                "phone": request.phone,
+                "provider": request.provider
+            }
+        
+        return {
+            "success": True,
+            "phone": request.phone,
+            "provider": request.provider,
+            "code": stored["code"],
+            "expires_at": stored["expires_at"],
+            "attempts": stored["attempts"]
+        }
+    except Exception as e:
+        logger.error(f"Failed to get last code: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to get last code: {str(e)}")
+
+

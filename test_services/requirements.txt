@@ -1,9 +1,0 @@
-fastapi
-uvicorn[standard]
-sqlalchemy
-databases
-aiosqlite
-pydantic
-httpx
-python-multipart
-

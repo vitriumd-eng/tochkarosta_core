@@ -10,6 +10,7 @@ from app.models.platform_content import PlatformContent
 from app.models.module_settings import ModuleSettings
 from app.models.module_registry import ModuleRegistry
 from app.models.deleted_accounts_history import DeletedAccountsHistory
+from app.models.user_external_account import UserExternalAccount
 
 __all__ = [
     "User",
@@ -20,4 +21,5 @@ __all__ = [
     "ModuleSettings",
     "ModuleRegistry",
     "DeletedAccountsHistory",
+    "UserExternalAccount",
 ]

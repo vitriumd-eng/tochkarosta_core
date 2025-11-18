@@ -7,20 +7,36 @@ import uuid
 
 
 class SendCodeRequest(BaseModel):
-    """Schema for sending OTP code"""
+    """Schema for sending OTP code (TG/MAX)"""
     phone: str = Field(..., description="User phone number in E.164 format")
+    provider: str = Field(..., description="Provider: telegram or max")
+    
+    @validator('provider')
+    def validate_provider(cls, v):
+        if v not in ['telegram', 'max']:
+            raise ValueError('Provider must be telegram or max')
+        return v.lower()
 
 
 class VerifyCodeRequest(BaseModel):
-    """Schema for verifying OTP code"""
+    """Schema for verifying OTP code and creating user+tenant"""
     phone: str = Field(..., description="User phone number")
     code: str = Field(..., description="OTP code")
+    provider: str = Field(..., description="Provider: telegram or max")
+    
+    @validator('provider')
+    def validate_provider(cls, v):
+        if v not in ['telegram', 'max']:
+            raise ValueError('Provider must be telegram or max')
+        return v.lower()
 
 
 class AuthResponse(BaseModel):
     """Schema for authentication response"""
     access_token: str
     refresh_token: str
+    tenant_id: str
+    user_id: Optional[str] = None
 
 
 class RegisterRequest(BaseModel):
@@ -97,6 +113,36 @@ class LoginResponse(BaseModel):
     """Schema for login response"""
     token: str
     role: str
+
+
+class ExternalAuthRequest(BaseModel):
+    """Schema for OAuth external authentication request"""
+    provider: str = Field(..., description="OAuth provider: 'telegram' or 'max'")
+    external_id: str = Field(..., description="External provider user ID")
+    username: Optional[str] = Field(None, description="Username from provider")
+    first_name: Optional[str] = Field(None, description="First name from provider")
+    last_name: Optional[str] = Field(None, description="Last name from provider")
+    signature: str = Field(..., description="Signature/hash for verification")
+    
+    @validator('provider')
+    def validate_provider(cls, v):
+        """Validate provider value"""
+        if v not in ['telegram', 'max']:
+            raise ValueError('Provider must be telegram or max')
+        return v
+
+
+class OAuthAuthResponse(BaseModel):
+    """Schema for OAuth authentication response"""
+    access_token: str
+    refresh_token: str
+    tenant_id: str
+    user_id: str
+
+
+class OAuthVKRequest(BaseModel):
+    """Schema for VK OAuth callback request"""
+    code: str = Field(..., description="VK OAuth authorization code")
 
 
 

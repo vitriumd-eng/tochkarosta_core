@@ -29,7 +29,58 @@ export async function POST(request: NextRequest) {
       identifierLength: body.identifier?.length,
     })
     
-    const backendUrl = `${BACKEND_URL}/api/v1/auth/request_code`
+    // Gateway must always forward to /send-code endpoint (according to OpenAPI)
+    // If request has channel/identifier, we need to convert it to phone
+    // For now, we'll forward phone requests directly, and reject channel/identifier
+    // TODO: Implement proper conversion: Telegram-ID → phone (requires OAuth or user lookup)
+    
+    // Helper function to normalize phone to E.164
+    function normalizePhone(phone: string): string {
+      // Remove all non-digit characters except +
+      let normalized = phone.replace(/[^\d+]/g, '')
+      // If doesn't start with +, assume Russian format and add +7
+      if (!normalized.startsWith('+')) {
+        if (normalized.startsWith('8')) {
+          normalized = '+7' + normalized.substring(1)
+        } else if (normalized.startsWith('7')) {
+          normalized = '+' + normalized
+        } else {
+          normalized = '+7' + normalized
+        }
+      }
+      return normalized
+    }
+    
+    const hasPhone = body.phone !== undefined;
+    const hasChannel = body.channel !== undefined && body.identifier !== undefined;
+    
+    let backendUrl: string;
+    let requestBody: any;
+    
+    // Gateway: normalize payload and validate endpoint exists in OpenAPI
+    // Payload normalization: phone to E.164, provider to lower-case
+    if (hasPhone) {
+      // Phone-based registration: use send-code endpoint
+      const provider = body.provider || 'telegram' // Default to telegram
+      backendUrl = `${BACKEND_URL}/api/v1/auth/send-code`
+      // Normalize: phone to E.164 format, provider to lowercase
+      requestBody = { 
+        phone: normalizePhone(body.phone),
+        provider: provider.toLowerCase()
+      }
+    } else if (hasChannel) {
+      // Legacy channel/identifier format - convert to phone+provider
+      // For Telegram/MAX, identifier is phone
+      backendUrl = `${BACKEND_URL}/api/v1/auth/send-code`
+      requestBody = {
+        phone: normalizePhone(body.identifier),
+        provider: body.channel.toLowerCase()
+      }
+    } else {
+      // Default to send-code for backward compatibility
+      backendUrl = `${BACKEND_URL}/api/v1/auth/send-code`
+      requestBody = body
+    }
     console.log('[API] /api/auth/request-code - Forwarding to backend', {
       requestId,
       backendUrl,
@@ -43,7 +94,7 @@ export async function POST(request: NextRequest) {
         'X-Request-ID': requestId,
       },
       credentials: 'include',
-      body: JSON.stringify(body),
+      body: JSON.stringify(requestBody),
     })
 
     const duration = Date.now() - startTime

@@ -21,13 +21,19 @@ class User(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True)
-    phone = Column(String(20), unique=True, nullable=False)
+    phone = Column(String(20), unique=True, nullable=True)  # Nullable for VK OAuth users
     phone_verified = Column(Boolean, default=False, nullable=False)
     password_hash = Column(String, nullable=True)  # For platform_master login/password auth
     # Temporarily use String instead of Enum to avoid database type issues
     # role = Column(SQLEnum(UserRole, values_callable=lambda x: [e.value for e in x]), nullable=True)
     role = Column(String(20), nullable=True)  # Store role as string: 'super_admin', 'platform_master', 'user', 'subscriber', 'buyer'
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    
+    # OAuth provider fields
+    auth_provider = Column(String(20), nullable=True)  # 'telegram', 'max', 'vk'
+    tg_user_id = Column(String(255), nullable=True)
+    max_user_id = Column(String(255), nullable=True)
+    vk_id = Column(String(255), nullable=True)
 
     # Relationships
     tenant = relationship("Tenant", back_populates="users")

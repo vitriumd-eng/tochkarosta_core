@@ -1,0 +1,11 @@
+version: '3.8'
+services:
+  core:
+    build: ./core-backend
+    ports: ['8000:8000']
+  gateway:
+    build: ./gateway
+    ports: ['3000:3000']
+  module:
+    build: ./module_template
+    ports: ['8100:8000']

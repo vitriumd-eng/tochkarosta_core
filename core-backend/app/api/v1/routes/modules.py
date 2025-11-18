@@ -10,7 +10,7 @@ router = APIRouter()
 
 @router.get("/subscription")
 async def get_subscription_status(request: Request):
-    """SDK endpoint: Get subscription status"""
+    """SDK endpoint: Get module subscription status for tenant"""
     tenant_id = getattr(request.state, "tenant_id", None)
     if not tenant_id:
         raise HTTPException(status_code=401, detail="No tenant found")

@@ -1,18 +1,17 @@
 'use client'
 
 import { useState } from 'react'
-import { register, sendOTP, requestCode, confirmCode } from '@/lib/api/register'
+import { register, sendOTP } from '@/lib/api/register'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 
-type Step = 'method' | 'identifier' | 'code' | 'registering'
+type Step = 'method' | 'phone' | 'code' | 'registering'
 
 export default function RegisterPage() {
   const router = useRouter()
   const [step, setStep] = useState<Step>('method')
-  const [channel, setChannel] = useState<'telegram' | 'max' | null>(null)
-  const [identifier, setIdentifier] = useState('')
+  const [channel, setChannel] = useState<'telegram' | 'max' | 'vk' | null>(null)
   const [code, setCode] = useState('')
   const [phone, setPhone] = useState('') // Still used for old flow
   const [otpCode, setOtpCode] = useState('') // Still used for old flow
@@ -176,7 +175,7 @@ export default function RegisterPage() {
                   onClick={() => {
                     if (!agreeTerms || !agreePrivacy) return
                     setChannel('telegram')
-                    setStep('identifier')
+                    setStep('phone')
                   }}
                   disabled={!agreeTerms || !agreePrivacy}
                   className={`w-full flex items-center justify-center gap-3 px-6 py-3 font-semibold rounded-xl transition-colors ${
@@ -195,7 +194,7 @@ export default function RegisterPage() {
                   onClick={() => {
                     if (!agreeTerms || !agreePrivacy) return
                     setChannel('max')
-                    setStep('identifier')
+                    setStep('phone')
                   }}
                   disabled={!agreeTerms || !agreePrivacy}
                   className={`w-full flex items-center justify-center gap-3 px-6 py-3 font-semibold rounded-xl transition-colors ${
@@ -208,6 +207,36 @@ export default function RegisterPage() {
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                   </svg>
                   <span>Войти через Max</span>
+                </button>
+                
+                <button
+                  onClick={() => {
+                    if (!agreeTerms || !agreePrivacy) return
+                    // VK OAuth redirect
+                    const vkAppId = process.env.NEXT_PUBLIC_VK_APP_ID || ''
+                    const redirectUri = typeof window !== 'undefined' 
+                      ? `${window.location.origin}/auth/vk/callback`
+                      : 'http://localhost:7001/auth/vk/callback'
+                    
+                    if (!vkAppId) {
+                      setError('VK OAuth не настроен. Пожалуйста, используйте другой способ регистрации.')
+                      return
+                    }
+                    
+                    const vkAuthUrl = `https://oauth.vk.com/authorize?client_id=${vkAppId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=email&v=5.131&display=page`
+                    window.location.href = vkAuthUrl
+                  }}
+                  disabled={!agreeTerms || !agreePrivacy}
+                  className={`w-full flex items-center justify-center gap-3 px-6 py-3 font-semibold rounded-xl transition-colors ${
+                    agreeTerms && agreePrivacy
+                      ? 'bg-[#0077FF] text-white hover:bg-[#0066DD]'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
+                >
+                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12.785 16.241s-.327.038-.745-.038c-.509-.086-1.2-.3-1.662-.535-.19-.095-.475-.238-.475-.475 0-.143.095-.238.19-.3.19-.143.475-.238.66-.3.856-.38 1.338-.6 1.338-1.2 0-.509-.38-.856-1.015-.856-.713 0-1.1.3-1.2.856 0 .095-.095.19-.19.19h-1.015c-.19 0-.285-.095-.285-.238 0-.713.475-1.9 1.9-1.9 1.2 0 1.9.713 1.9 1.662 0 .856-.475 1.338-1.015 1.662-.095.047-.19.095-.19.19 0 .095.047.143.143.238.19.19.475.38.856.475.19.047.38.095.475.19.19.19.19.38.19.475 0 .19-.095.38-.19.475zm-1.338-6.09c-.713 0-1.338.6-1.338 1.338s.6 1.338 1.338 1.338 1.338-.6 1.338-1.338-.6-1.338-1.338-1.338zM12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 5.562c.19 0 .38.19.38.38v1.338c0 .19-.19.38-.38.38h-1.338c-.19 0-.38-.19-.38-.38V5.942c0-.19.19-.38.38-.38h1.338zm-2.856 0c.19 0 .38.19.38.38v1.338c0 .19-.19.38-.38.38h-1.338c-.19 0-.38-.19-.38-.38V5.942c0-.19.19-.38.38-.38h1.338z"/>
+                  </svg>
+                  <span>Войти через VK</span>
                 </button>
               </div>
 
@@ -274,14 +303,14 @@ export default function RegisterPage() {
             </div>
           )}
 
-          {/* Step 2: Identifier Input */}
-          {step === 'identifier' && (
+          {/* Step 2: Phone Input (Telegram/MAX 2FA) */}
+          {step === 'phone' && (channel === 'telegram' || channel === 'max') && (
             <div>
               <button
                 onClick={() => {
                   setStep('method')
                   setChannel(null)
-                  setIdentifier('')
+                  setPhone('')
                 }}
                 className="mb-4 text-gray-600 hover:text-gray-900 flex items-center gap-2"
               >
@@ -289,99 +318,68 @@ export default function RegisterPage() {
                 <span>Назад</span>
               </button>
               <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                Введите {channel === 'telegram' ? 'Telegram' : 'MAX'} идентификатор
+                Введите номер телефона
               </h2>
               <p className="text-gray-600 mb-4">
-                {channel === 'telegram' 
-                  ? 'Введите ваш Telegram @username (например: @username)'
-                  : 'Введите ваш MAX user_id'}
+                Код подтверждения будет отправлен в {channel === 'telegram' ? 'Telegram' : 'MAX'}
               </p>
               <input
-                type="text"
-                placeholder={channel === 'telegram' ? '@username' : 'max_user_id'}
-                value={identifier}
-                onChange={(e) => {
-                  const value = e.target.value
-                  console.log('[REGISTER] Input onChange', {
-                    value,
-                    valueLength: value.length,
-                    channel,
-                    previousIdentifier: identifier,
-                  })
-                  setIdentifier(value)
-                }}
-                onInput={(e) => {
-                  const target = e.target as HTMLInputElement
-                  const value = target.value
-                  console.log('[REGISTER] Input onInput', {
-                    value,
-                    valueLength: value.length,
-                    channel,
-                    previousIdentifier: identifier,
-                  })
-                  setIdentifier(value)
-                }}
+                type="tel"
+                placeholder="+79991234567"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
                 className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none text-lg mb-4"
               />
               <button
                 onClick={async () => {
-                  console.log('[REGISTER] Button clicked - Start request code flow', {
-                    identifier,
-                    channel,
-                    identifierLength: identifier?.length,
-                    hasIdentifier: !!identifier,
-                  })
-                  
-                  if (!identifier) {
-                    console.warn('[REGISTER] No identifier provided')
-                    setError('Пожалуйста, введите идентификатор')
+                  if (!phone || phone.length < 10) {
+                    setError('Пожалуйста, введите корректный номер телефона')
                     return
                   }
                   
                   setLoading(true)
                   setError(null)
                   
-                  const payload = {
-                    channel: channel!,
-                    identifier: identifier,
-                  }
-                  
-                  console.log('[REGISTER] Calling requestCode API', {
-                    payload,
-                    url: '/api/auth/request-code',
-                    timestamp: new Date().toISOString(),
-                  })
-                  
                   try {
-                    const result = await requestCode(payload)
-                    console.log('[REGISTER] requestCode success', {
-                      result,
-                      nextStep: 'code',
-                      timestamp: new Date().toISOString(),
+                    // Normalize phone to E.164 format
+                    let normalizedPhone = phone.replace(/[^\d+]/g, '')
+                    if (!normalizedPhone.startsWith('+')) {
+                      if (normalizedPhone.startsWith('8')) {
+                        normalizedPhone = '+7' + normalizedPhone.substring(1)
+                      } else if (normalizedPhone.startsWith('7')) {
+                        normalizedPhone = '+' + normalizedPhone
+                      } else {
+                        normalizedPhone = '+7' + normalizedPhone
+                      }
+                    }
+                    
+                    const response = await fetch('/api/auth/send-code', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        phone: normalizedPhone,
+                        provider: channel
+                      }),
                     })
+                    
+                    if (!response.ok) {
+                      const errorData = await response.json()
+                      throw new Error(errorData.detail || errorData.error || 'Не удалось отправить код')
+                    }
+                    
                     setStep('code')
                   } catch (err: unknown) {
                     const message = err instanceof Error ? err.message : 'Не удалось отправить код'
-                    console.error('[REGISTER] requestCode error', {
-                      error: err,
-                      message,
-                      payload,
-                      errorType: err instanceof Error ? err.constructor.name : typeof err,
-                      stack: err instanceof Error ? err.stack : undefined,
-                      timestamp: new Date().toISOString(),
-                    })
                     setError(message)
                   } finally {
                     setLoading(false)
-                    console.log('[REGISTER] Request code flow finished', {
-                      loading: false,
-                      timestamp: new Date().toISOString(),
-                    })
                   }
                 }}
-                disabled={loading || !identifier}
+                disabled={loading || !phone || phone.length < 10}
                 className={`w-full px-6 py-3 font-bold rounded-xl transition-colors ${
-                  identifier && !loading
+                  phone && phone.length >= 10 && !loading
                     ? 'bg-blue-500 text-white hover:bg-blue-600'
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
@@ -389,17 +387,17 @@ export default function RegisterPage() {
                 {loading ? 'Отправка...' : 'Отправить код'}
               </button>
               <p className="text-sm text-gray-500 text-center mt-4">
-                Код будет отправлен в консоль сервера (dev-режим)
+                Код будет отправлен в {channel === 'telegram' ? 'Telegram' : 'MAX'} (dev-режим: проверьте консоль сервера)
               </p>
             </div>
           )}
 
-          {/* Step 3: Code Verification */}
-          {step === 'code' && (
+          {/* Step 3: Code Verification (Telegram/MAX 2FA) */}
+          {step === 'code' && (channel === 'telegram' || channel === 'max') && (
             <div>
               <button
                 onClick={() => {
-                  setStep('identifier')
+                  setStep('phone')
                   setCode('')
                 }}
                 className="mb-4 text-gray-600 hover:text-gray-900 flex items-center gap-2"
@@ -409,10 +407,10 @@ export default function RegisterPage() {
               </button>
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Введите код подтверждения</h2>
               <p className="text-gray-600 mb-4">
-                Код отправлен для {channel === 'telegram' ? `Telegram ${identifier}` : `MAX ${identifier}`}
+                Код отправлен в {channel === 'telegram' ? 'Telegram' : 'MAX'} на номер {phone}
               </p>
               <p className="text-sm text-gray-500 mb-4 text-center">
-                Проверьте консоль сервера для получения кода
+                Проверьте {channel === 'telegram' ? 'Telegram' : 'MAX'} для получения кода (dev-режим: проверьте консоль сервера)
               </p>
               <input
                 type="text"
@@ -434,29 +432,49 @@ export default function RegisterPage() {
                   setStep('registering')
                   
                   try {
-                    const result = await confirmCode({
-                      channel: channel!,
-                      identifier: identifier,
-                      code: code,
+                    // Normalize phone to E.164 format
+                    let normalizedPhone = phone.replace(/[^\d+]/g, '')
+                    if (!normalizedPhone.startsWith('+')) {
+                      if (normalizedPhone.startsWith('8')) {
+                        normalizedPhone = '+7' + normalizedPhone.substring(1)
+                      } else if (normalizedPhone.startsWith('7')) {
+                        normalizedPhone = '+' + normalizedPhone
+                      } else {
+                        normalizedPhone = '+7' + normalizedPhone
+                      }
+                    }
+                    
+                    const response = await fetch('/api/auth/verify', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        phone: normalizedPhone,
+                        code: code,
+                        provider: channel
+                      }),
                     })
                     
-                    // Save tenant_id to localStorage
-                    localStorage.setItem('tenant_id', result.tenant_id)
+                    if (!response.ok) {
+                      const errorData = await response.json()
+                      throw new Error(errorData.detail || errorData.error || 'Не удалось подтвердить код')
+                    }
                     
-                    // In dev mode, also save to .env.local via API
-                    if (process.env.NODE_ENV === 'development') {
-                      try {
-                        await fetch('/api/dev/save-tenant-id', {
-                          method: 'POST',
-                          headers: {
-                            'Content-Type': 'application/json',
-                          },
-                          body: JSON.stringify({ tenant_id: result.tenant_id }),
-                        })
-                      } catch (err) {
-                        console.warn('Failed to save tenant_id to .env.local:', err)
-                        // Continue anyway
-                      }
+                    const result = await response.json()
+                    
+                    // Save tokens and IDs
+                    if (result.access_token) {
+                      localStorage.setItem('token', result.access_token)
+                    }
+                    if (result.refresh_token) {
+                      localStorage.setItem('refresh_token', result.refresh_token)
+                    }
+                    if (result.tenant_id) {
+                      localStorage.setItem('tenant_id', result.tenant_id)
+                    }
+                    if (result.user_id) {
+                      localStorage.setItem('user_id', result.user_id)
                     }
                     
                     // Redirect to module selection

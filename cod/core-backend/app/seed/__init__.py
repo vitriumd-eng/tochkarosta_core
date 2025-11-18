@@ -1,4 +1,0 @@
-"""
-Seed scripts package
-"""
-

@@ -47,7 +47,7 @@ export const Hero = () => {
       style={{ 
         background: 'linear-gradient(-45deg, #00C742, #00B36C, #0082D6, #007DE3, #00C742)',
         backgroundSize: '400% 400%',
-        paddingTop: '80px',
+        paddingTop: '120px',
         paddingBottom: 'clamp(100px, 15vw, 217.5px)',
         animation: 'gradient 15s ease infinite',
         zIndex: 10

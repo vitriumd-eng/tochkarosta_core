@@ -98,6 +98,8 @@ class VerificationService:
             }
         
         # In dev mode, log code to console
+        from app.core.config import settings
+        
         logger.info(
             "[VERIFICATION] generate_code - Code generated and stored",
             extra={
@@ -110,10 +112,17 @@ class VerificationService:
                 "storage_type": "redis" if _redis_client else "in-memory",
             }
         )
-        # Use logger instead of print for production compatibility
-        import sys
-        if sys.stdout.isatty():  # Only print if running in terminal
-            print(f"[VERIFICATION] Code for {channel} {identifier}: {code}", file=sys.stderr)
+        
+        # In DEV_MODE, always print code to console (never send to providers)
+        if settings.DEV_MODE:
+            print(f"\n{'='*60}")
+            print(f"[DEV MODE] OTP for {identifier}")
+            print(f"[DEV MODE] Code:  {code}")
+            print(f"{'='*60}\n")
+            logger.info(f"[DEV MODE] OTP for {channel} {identifier} = {code}")
+        else:
+            # Production mode: log without showing code
+            logger.info(f"[VERIFICATION] Code for {channel} {identifier}: {code[:2]}****")
         
         logger.debug(
             "[VERIFICATION] generate_code - Completed",
