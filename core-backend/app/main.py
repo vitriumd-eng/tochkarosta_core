@@ -1,146 +1,59 @@
-"""
-Core Backend - FastAPI Main Application
-Modular SaaS Platform Core
-"""
-from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
-import uvicorn
-import os
 import logging
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from app.middleware.tenant import TenantMiddleware
-from app.middleware.correlation import CorrelationIdMiddleware
+
+from app.core.config import settings
+from app.core.logging_config import setup_logging
+from app.core.health import router as health_router
+from app.modules.auth.routes import router as auth_router
+from app.modules.tenants.routes import router as tenants_router
+from app.modules.billing.routes import router as billing_router
 
 # Настройка логирования
-logging.basicConfig(
-    level=logging.INFO,
-    format='[%(asctime)s] %(levelname)s [%(name)s] %(message)s'
-)
-logger = logging.getLogger(__name__)
+logger = setup_logging()
 
-# Lifespan: Autoload modules from /modules/*/manifest.json
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Lifespan event handler for startup and shutdown"""
-    # Startup
-    try:
-        # Initialize database connection pool first
-        from app.db.session import init_db_pool
-        await init_db_pool()
-        logger.info("Database connection pool initialized")
-    except Exception as e:
-        logger.error(f"Failed to initialize database pool at startup: {e}", exc_info=True)
-        # Don't raise - let the app start, but log the error
-    
-    try:
-        from app.utils.module_loader import sync_modules_to_registry
-        count = await sync_modules_to_registry()
-        logger.info(f"Loaded {count} modules from disk to registry")
-    except Exception as e:
-        logger.error(f"Failed to load modules at startup: {e}", exc_info=True)
-    
+    logger.info(f"🚀 CORE Starting up in {settings.ENVIRONMENT} mode...")
+    # Здесь можно добавить проверку БД
     yield
-    
-    # Shutdown
-    logger.info("Shutting down application")
-
+    logger.info("🛑 CORE Shutting down...")
 
 app = FastAPI(
-    title="Modular SaaS Core",
-    description="Core backend for modular SaaS platform",
-    version="1.0.0",
+    title=settings.PROJECT_NAME,
+    version=settings.VERSION,
     lifespan=lifespan
 )
 
-# Обработчик ошибок валидации
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    logger.warning(f"Validation error: {exc.errors()}")
-    return JSONResponse(
-        status_code=422,
-        content={"detail": exc.errors(), "body": str(exc.body) if hasattr(exc, 'body') else None}
-    )
+# CORS Setup
+origins = settings.BACKEND_CORS_ORIGINS
+if isinstance(origins, str):
+    origins = origins.split(",")
 
-# Обработчик общих исключений (не перехватывает HTTPException)
-@app.exception_handler(Exception)
-async def general_exception_handler(request: Request, exc: Exception):
-    from fastapi import HTTPException
-    # Пропускаем HTTPException - они обрабатываются FastAPI
-    if isinstance(exc, HTTPException):
-        raise exc
-    logger.error(
-        f"Unhandled exception: {type(exc).__name__}: {exc}",
-        exc_info=True,
-        extra={
-            "path": request.url.path,
-            "method": request.method,
-            "request_id": request.headers.get("X-Request-ID")
-        }
-    )
-    return JSONResponse(
-        status_code=500,
-        content={"detail": "Internal server error"}
-    )
-
-# Database engine is initialized automatically in session.py
-
-# Middleware
-app.add_middleware(CorrelationIdMiddleware)
-app.add_middleware(TenantMiddleware)
-
-# CORS
-from app.core.config import settings
-cors_origins = settings.cors_origins_list
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=cors_origins,
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include routers from v1
-from app.api.v1.routes import auth, auth_oauth, tenants, subscriptions, modules, platform, users, super_admin, dev
-
-app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
-app.include_router(auth_oauth.router, prefix="/api/v1/auth", tags=["auth"])
-app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
-app.include_router(tenants.router, prefix="/api/v1/tenants", tags=["tenants"])
-app.include_router(subscriptions.router, prefix="/api/v1/subscriptions", tags=["subscriptions"])
-app.include_router(modules.router, prefix="/api/v1/modules", tags=["modules"])
-app.include_router(platform.router, prefix="/api/v1/platform", tags=["platform"])
-app.include_router(super_admin.router, prefix="/api/v1/super-admin", tags=["super-admin"])
-app.include_router(dev.router, prefix="/api/v1/dev", tags=["dev"])
-
-
-@app.get("/")
-async def root():
-    return {"message": "Modular SaaS Core API", "version": "1.0.0"}
-
-
-@app.get("/health")
-async def health():
-    return {"status": "healthy"}
-
-
-if __name__ == "__main__":
-    from app.core.config import settings
-    # Exclude frequently accessed files from reload to prevent aggressive WatchFiles issues
-    # These files are often opened by Cursor/IDE and trigger unnecessary reloads
-    # Uvicorn accepts multiple --reload-exclude, each with ONE parameter (path/mask)
-    reload_excludes = [
-        "app/api/v1/routes/auth.py",
-        "app/services/*",
-        "app/db/*",
-        "app/middleware/*"
-    ]
-    uvicorn.run(
-        "app.main:app",
-        host=settings.HOST,
-        port=settings.PORT,
-        reload=True,
-        reload_excludes=reload_excludes
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Global error: {str(exc)}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal Server Error (Check logs)"}
     )
 
+# Register Routes
+app.include_router(health_router, tags=["Health"])
+app.include_router(auth_router, prefix="/api/auth", tags=["Auth"])
+app.include_router(tenants_router, prefix="/api/tenants", tags=["Tenants"])
+app.include_router(billing_router, prefix="/api/billing", tags=["Billing"])
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)

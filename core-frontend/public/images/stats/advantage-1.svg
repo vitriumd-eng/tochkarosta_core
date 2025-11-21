@@ -1,7 +1,0 @@
-<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M150 50L100 100L150 150M50 50L100 100L50 150" stroke="currentColor" stroke-width="8" stroke-linecap="round" opacity="0.3"/>
-  <circle cx="100" cy="100" r="30" stroke="currentColor" stroke-width="6" opacity="0.2"/>
-  <path d="M70 70L130 130M130 70L70 130" stroke="currentColor" stroke-width="4" stroke-linecap="round" opacity="0.4"/>
-</svg>
-
-

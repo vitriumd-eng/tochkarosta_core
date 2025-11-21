@@ -1,21 +1,16 @@
-/**
- * Super Admin Dashboard Layout
- * Dashboard for platform and core administration (Founder)
- */
-import { ReactNode } from 'react'
+import ProtectedRoute from '../components/ProtectedRoute'
 
 export default function SuperAdminLayout({
   children,
 }: {
-  children: ReactNode
+  children: React.ReactNode
 }) {
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <ProtectedRoute requireAuth requireSuperuser>
       {children}
-    </div>
+    </ProtectedRoute>
   )
 }
-
 
 
 

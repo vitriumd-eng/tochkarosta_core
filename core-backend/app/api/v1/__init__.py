@@ -1,2 +1,7 @@
-"""API v1 package"""
+"""
+API v1 namespace
+Для будущего версионирования API
+"""
+
+
 

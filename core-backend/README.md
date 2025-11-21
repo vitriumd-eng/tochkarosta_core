@@ -1,158 +1,80 @@
-# TochkaRosta Core Backend
+# Core Backend - Tochka Rosta
 
-**Версия:** 1.0.0  
-**Технологии:** FastAPI + async SQLAlchemy + PostgreSQL
+Ядро платформы "Точка Роста" - управление пользователями, tenants, тарифами и подписками.
 
----
+## Технологии
 
-## Описание
+- **FastAPI** 0.109.0 - Асинхронный веб-фреймворк
+- **SQLAlchemy** 2.0.25 - ORM с поддержкой async
+- **PostgreSQL** - База данных (AsyncPG)
+- **Alembic** - Миграции БД
+- **Pydantic** 2.6.0 - Валидация данных
+- **JWT** - Аутентификация
 
-Ядро платформы TochkaRosta - модульная SaaS платформа с мультитенантностью и системой модулей.
+## Структура модулей
 
----
+### `app/core/`
+- `config.py` - Настройки приложения
+- `db.py` - Базовые классы моделей
+- `database.py` - Сессия БД
 
-## Быстрый старт
+### `app/models/`
+- `user.py` - Модель пользователя
+- `tenant.py` - Модель tenant (бизнес-единицы)
 
-### 1. Установка зависимостей
+### `app/modules/auth/`
+- Аутентификация и регистрация
+- JWT токены
+- OTP коды (в DEV режиме выводятся в консоль)
 
-```bash
-cd core-backend
-python -m venv venv
-venv\Scripts\activate  # Windows
-# source venv/bin/activate  # Linux/macOS
-pip install -r requirements.txt
-```
+### `app/modules/tenants/`
+- Управление tenants
+- Получение информации о текущем tenant
 
-### 2. Настройка базы данных
+### `app/modules/billing/`
+- Тарифы (Tariff)
+- Подписки (Subscription)
 
-Скопируйте `.env.example` в `.env` и настройте:
+## Переменные окружения
+
+Создайте файл `.env` в корне `core-backend/`:
 
 ```env
-DATABASE_URL=postgresql+asyncpg://postgres:password@localhost:5432/modular_saas_core
-JWT_SECRET_KEY=your-secret-key-here-minimum-32-characters-long
+PROJECT_NAME="Tochka Rosta Core"
+VERSION="2.0.0"
+ENVIRONMENT="local"
+DEV_MODE=True
+
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_SERVER=localhost
+POSTGRES_PORT=5432
+POSTGRES_DB=core_db
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/core_db
+
+REDIS_URL=redis://localhost:6379/0
+
+SECRET_KEY=DEV_SECRET_CHANGE_IN_PROD_12345
+ACCESS_TOKEN_EXPIRE_MINUTES=10080
+ALGORITHM=HS256
 ```
 
-Подробнее см. `SETUP_DATABASE.md`.
-
-### 3. Применение миграций
+## Запуск
 
 ```bash
+# Установка зависимостей
+pip install -r requirements.txt
+
+# Применение миграций
 alembic upgrade head
-```
 
-### 4. Создание пользователя platform_master
-
-```bash
-python -m app.db.autoseed
-```
-
-### 5. Запуск backend
-
-```bash
+# Запуск сервера
 python -m uvicorn app.main:app --reload
 ```
 
-Или используйте Makefile:
+Сервер будет доступен на `http://localhost:8000`
 
-```bash
-make run
-```
-
-Backend будет доступен на `http://localhost:8000`
-
----
-
-## Структура проекта
-
-```
-core-backend/
-├── app/
-│   ├── api/v1/routes/    # API endpoints
-│   ├── core/             # Конфигурация и безопасность
-│   ├── db/               # База данных и сессии
-│   ├── models/           # SQLAlchemy модели
-│   ├── schemas/          # Pydantic схемы
-│   ├── services/         # Бизнес-логика
-│   ├── middleware/       # Middleware
-│   └── modules/          # Система модулей
-├── alembic/              # Миграции базы данных
-├── tests/                # Тесты
-├── Dockerfile            # Docker образ
-├── docker-compose.local.yml  # Docker Compose для локальной разработки
-└── requirements.txt      # Python зависимости
-```
-
----
-
-## API Endpoints
-
-- `/api/v1/auth` - Аутентификация
-- `/api/v1/tenants` - Управление тенантами
-- `/api/v1/subscriptions` - Управление подписками
-- `/api/v1/modules` - Управление модулями
-- `/api/v1/platform` - Платформенный дашборд
-
-Swagger документация: `http://localhost:8000/docs`
-
----
-
-## Команды Makefile
-
-```bash
-make install    # Установить зависимости
-make test       # Запустить тесты
-make run        # Запустить сервер разработки
-make migrate    # Создать новую миграцию
-make upgrade    # Применить миграции
-make seed       # Заполнить БД начальными данными
-make clean      # Очистить кэш и временные файлы
-```
-
----
-
-## Docker
-
-### Локальная разработка
-
-```bash
-docker-compose -f docker-compose.local.yml up
-```
-
-Это запустит:
-- PostgreSQL на порту 5432
-- Backend на порту 8000
-
----
-
-## Тестирование
-
-```bash
-pytest -v
-```
-
-Или через Makefile:
-
-```bash
-make test
-```
-
----
-
-## Документация
-
-- `START.md` - Инструкция по запуску
-- `SETUP_DATABASE.md` - Настройка базы данных
-- `DEPLOYMENT.md` - Развертывание
-- `FULL_CODE_AUDIT.md` - Полный аудит проекта
-- `COMPLIANCE_REPORT.md` - Отчет о соответствии правилам
-
----
-
-## Лицензия
-
-Проприетарная лицензия
-
-
+API документация: `http://localhost:8000/docs`
 
 
 

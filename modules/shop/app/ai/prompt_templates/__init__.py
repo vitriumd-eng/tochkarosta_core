@@ -1,4 +1,0 @@
-"""AI prompt templates"""
-
-
-

@@ -54,7 +54,7 @@ export const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link href="/register" className="text-gray-400 hover:text-[#00C742] transition-colors">
+                <Link href="http://localhost:7001/register" className="text-gray-400 hover:text-[#00C742] transition-colors">
                   Регистрация
                 </Link>
               </li>

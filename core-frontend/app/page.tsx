@@ -1,9 +1,6 @@
 /**
- * Platform Page - Public entry point for subscribers
- * Registration flow: tariff → module → phone → subdomain → site creation
- * This is NOT a module - it's part of core and cannot be moved/deleted
- * 
- * Design based on D:\tochkarosta_v5\frontend\app\(public)\page.tsx
+ * Platform Page - Public entry point
+ * Design based on D:\tochkarosta_core — копия\core-frontend\app\page.tsx
  * Visual design recreated 1:1 with clean modern code for App Router
  * 
  * Правила переноса:
@@ -15,7 +12,10 @@
 import { Header } from '@/components/platform/Header'
 import { Hero } from '@/components/platform/Hero'
 import { HeroMedia } from '@/components/platform/HeroMedia'
+import { FeaturesPreview } from '@/components/platform/FeaturesPreview'
 import { Stats } from '@/components/platform/Stats'
+import { BusinessScale } from '@/components/platform/BusinessScale'
+import { StatsFeaturesBridge } from '@/components/platform/StatsFeaturesBridge'
 import { Features } from '@/components/platform/Features'
 import { WhyChoose } from '@/components/platform/WhyChoose'
 import { Pricing } from '@/components/platform/Pricing'
@@ -26,15 +26,18 @@ import { Footer } from '@/components/platform/Footer'
 export default async function PlatformPage() {
   return (
     <div 
-      className="min-h-screen bg-[#FFFBEA] relative platform-page"
+      className="min-h-screen bg-white relative platform-page"
       style={{ 
         fontFamily: "'PF BeauSans Pro', 'Montserrat', sans-serif"
       }}
     >
       <Header />
       <Hero />
+      <StatsFeaturesBridge />
       <HeroMedia />
+      <FeaturesPreview />
       <Stats />
+      <Roadmap />
       <Features />
       <WhyChoose />
       <Pricing />

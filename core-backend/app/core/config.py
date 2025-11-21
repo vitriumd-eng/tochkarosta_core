@@ -1,64 +1,40 @@
-"""
-Core Configuration
-Uses Pydantic Settings for environment variables
-"""
-from pydantic_settings import BaseSettings
-from typing import Optional
-
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import List, Union, Optional
 
 class Settings(BaseSettings):
-    """Application settings from environment variables"""
-    
-    # Database
-    DATABASE_URL: str
-    
-    # JWT
-    JWT_SECRET_KEY: str
-    JWT_ALGORITHM: str = "HS256"
-    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    
-    # Server
-    HOST: str = "0.0.0.0"
-    PORT: int = 8000
-    
-    # Database Pool
-    DB_POOL_MIN_SIZE: int = 5
-    DB_POOL_MAX_SIZE: int = 10
-    
-    # CORS
-    CORS_ORIGINS: str = "http://localhost:7000,http://localhost:7001,http://localhost:7002,http://localhost:3000"
-    
-    # Environment
-    ENVIRONMENT: str = "development"
-    DEV_MODE: bool = True  # Local development mode - codes logged to console, not sent
-    
-    # SMS/OTP Providers
-    SMS_PROVIDER: str = "mock"  # mock, sms_ru, twilio, etc.
-    TELEGRAM_ACTIVE: bool = False  # Disable Telegram in dev mode
-    MAX_ACTIVE: bool = False  # Disable MAX in dev mode
-    VK_ACTIVE: bool = False  # Disable VK in dev mode
-    
-    @property
-    def cors_origins_list(self) -> list[str]:
-        """Get CORS origins as list, handling wildcard and production safety"""
-        if self.CORS_ORIGINS == "*":
-            # In production, warn about wildcard CORS
-            if self.ENVIRONMENT == "production":
-                import warnings
-                from warnings import SecurityWarning
-                warnings.warn(
-                    "CORS_ORIGINS=* is insecure for production! "
-                    "Set specific origins in CORS_ORIGINS.",
-                    SecurityWarning
-                )
-            return ["*"]
-        return [origin.strip() for origin in self.CORS_ORIGINS.split(",")]
-    
-    class Config:
-        env_file = ".env"
-        case_sensitive = False
-        extra = "ignore"  # Ignore extra fields from .env
+    PROJECT_NAME: str = "Tochka Rosta Core"
+    VERSION: str = "2.0.0"
+    API_V1_STR: str = "/api/v1"
+    ENVIRONMENT: str = "local"
+    DEV_MODE: bool = True
 
+    POSTGRES_USER: str = "postgres"
+    POSTGRES_PASSWORD: str = "postgres"
+    POSTGRES_SERVER: str = "localhost"
+    POSTGRES_PORT: int = 5432
+    POSTGRES_DB: str = "core_db"
+    DATABASE_URL: str = ""
+
+    REDIS_URL: Optional[str] = "redis://localhost:6379/0"
+    
+    # OTP Settings
+    OTP_EXPIRE_SECONDS: int = 300
+
+    SECRET_KEY: str = "secret"
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7
+
+    BACKEND_CORS_ORIGINS: Union[List[str], str] = []
+
+    # Providers Flags
+    TELEGRAM_ACTIVE: bool = False
+    MAX_ACTIVE: bool = False
+
+    model_config = SettingsConfigDict(env_file=".env", case_sensitive=True, extra="ignore")
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if not self.DATABASE_URL:
+            self.DATABASE_URL = f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
 
 settings = Settings()
-

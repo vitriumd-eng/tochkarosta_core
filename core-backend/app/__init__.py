@@ -1,4 +1,0 @@
-"""Core backend application package"""
-
-
-

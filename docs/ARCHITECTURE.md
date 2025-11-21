@@ -1,2 +1,0 @@
-# Architecture
-Core + Gateway + Modules

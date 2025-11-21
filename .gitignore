@@ -22,18 +22,20 @@ wheels/
 venv/
 env/
 ENV/
+.venv
 
 # Node
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
 .next/
 out/
 dist/
 build/
-.npm
-.eslintcache
-*.log
 
-# IDE
+# IDEs
 .vscode/
 .idea/
 *.swp
@@ -48,13 +50,21 @@ build/
 # Database
 *.db
 *.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Docker
-*.log
+# Alembic
+alembic/versions/*.pyc
+
+# TypeScript
+*.tsbuildinfo
 
 
 

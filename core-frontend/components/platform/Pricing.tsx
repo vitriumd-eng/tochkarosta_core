@@ -53,7 +53,7 @@ const TARIFFS = [
 ]
 
 export const Pricing = () => (
-  <section className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 md:px-8 bg-white">
+  <section id="pricing" className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 md:px-8 bg-white">
     <div className="max-w-7xl mx-auto">
       <div className="text-center mb-16">
         <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 mb-3 sm:mb-4">
@@ -105,7 +105,7 @@ export const Pricing = () => (
               ))}
             </ul>
             <Link
-              href="/register"
+              href="http://localhost:7001/register"
               className={`block w-full text-center py-3 rounded-lg font-semibold transition-all duration-300 ${
                 plan.popular
                   ? 'bg-white hover:bg-gray-100'
@@ -121,6 +121,4 @@ export const Pricing = () => (
     </div>
   </section>
 )
-
-
 

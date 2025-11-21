@@ -1,1 +1,0 @@
-- Follow master_prompt_v3 checklist

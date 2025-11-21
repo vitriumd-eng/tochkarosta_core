@@ -1,4 +1,0 @@
-"""Domain value objects"""
-
-
-

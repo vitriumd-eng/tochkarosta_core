@@ -25,8 +25,7 @@ export const CTA = () => (
       </p>
       <div className="flex flex-wrap gap-4 items-center justify-center mb-12">
         <Link
-          href="/register"
-          id="cta-register-btn"
+          href="http://localhost:7001/register"
           className="px-8 py-4 bg-white text-indigo-600 font-bold rounded-full text-lg transition-all duration-300 shadow-2xl hover:shadow-3xl hover:scale-105 transform"
         >
           Начать бесплатно
@@ -44,6 +43,4 @@ export const CTA = () => (
     </div>
   </section>
 )
-
-
 

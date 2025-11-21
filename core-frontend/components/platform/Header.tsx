@@ -1,15 +1,30 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY
+      setIsScrolled(scrollPosition > 50)
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   return (
     <header 
-      className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md shadow-sm"
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        isScrolled 
+          ? 'bg-white shadow-md' 
+          : 'bg-transparent'
+      }`}
       style={{ 
         fontFamily: "'PF BeauSans Pro', 'Montserrat', sans-serif"
       }}
@@ -32,36 +47,56 @@ export const Header = () => {
           <div className="hidden md:flex items-center space-x-6 lg:space-x-8">
             <Link 
               href="/modules" 
-              className="text-gray-700 hover:text-[#00C742] transition-colors font-medium"
+              className={`transition-colors font-medium ${
+                isScrolled 
+                  ? 'text-gray-700 hover:text-[#00C742]' 
+                  : 'text-gray-900 hover:text-[#00C742]'
+              }`}
             >
               Модули
             </Link>
             <Link 
               href="/#about" 
-              className="text-gray-700 hover:text-[#00C742] transition-colors font-medium"
+              className={`transition-colors font-medium ${
+                isScrolled 
+                  ? 'text-gray-700 hover:text-[#00C742]' 
+                  : 'text-gray-900 hover:text-[#00C742]'
+              }`}
             >
               О платформе
             </Link>
             <Link 
               href="/#pricing" 
-              className="text-gray-700 hover:text-[#00C742] transition-colors font-medium"
+              className={`transition-colors font-medium ${
+                isScrolled 
+                  ? 'text-gray-700 hover:text-[#00C742]' 
+                  : 'text-gray-900 hover:text-[#00C742]'
+              }`}
             >
               Тарифы
             </Link>
             <Link 
               href="/#roadmap" 
-              className="text-gray-700 hover:text-[#00C742] transition-colors font-medium"
+              className={`transition-colors font-medium ${
+                isScrolled 
+                  ? 'text-gray-700 hover:text-[#00C742]' 
+                  : 'text-gray-900 hover:text-[#00C742]'
+              }`}
             >
               Новости
             </Link>
             <Link 
               href="/auth" 
-              className="text-gray-700 hover:text-[#00C742] transition-colors font-medium"
+              className={`transition-colors font-medium ${
+                isScrolled 
+                  ? 'text-gray-700 hover:text-[#00C742]' 
+                  : 'text-gray-900 hover:text-[#00C742]'
+              }`}
             >
               Войти
             </Link>
             <Link
-              href="/register"
+              href="http://localhost:7001/register"
               className="px-6 py-2 bg-[#00C742] text-white font-bold rounded-full transition-all duration-300 hover:bg-[#00B36C] hover:scale-105"
             >
               Регистрация
@@ -71,7 +106,11 @@ export const Header = () => {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 text-gray-700 hover:text-[#00C742] transition-colors"
+            className={`md:hidden p-2 transition-colors ${
+              isScrolled 
+                ? 'text-gray-700 hover:text-[#00C742]' 
+                : 'text-gray-900 hover:text-[#00C742]'
+            }`}
             aria-label="Toggle menu"
           >
             <svg
@@ -94,44 +133,68 @@ export const Header = () => {
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden pb-4 border-t border-gray-200 mt-2 pt-4">
+          <div className={`md:hidden pb-4 mt-2 pt-4 transition-colors ${
+            isScrolled 
+              ? 'border-t border-gray-200' 
+              : 'border-t border-gray-300'
+          }`}>
             <Link 
               href="/modules" 
-              className="block py-2 text-gray-700 hover:text-[#00C742] transition-colors font-medium"
+              className={`block py-2 transition-colors font-medium ${
+                isScrolled 
+                  ? 'text-gray-700 hover:text-[#00C742]' 
+                  : 'text-gray-900 hover:text-[#00C742]'
+              }`}
               onClick={() => setIsMenuOpen(false)}
             >
               Модули
             </Link>
             <Link 
               href="/#about" 
-              className="block py-2 text-gray-700 hover:text-[#00C742] transition-colors font-medium"
+              className={`block py-2 transition-colors font-medium ${
+                isScrolled 
+                  ? 'text-gray-700 hover:text-[#00C742]' 
+                  : 'text-gray-900 hover:text-[#00C742]'
+              }`}
               onClick={() => setIsMenuOpen(false)}
             >
               О платформе
             </Link>
             <Link 
               href="/#pricing" 
-              className="block py-2 text-gray-700 hover:text-[#00C742] transition-colors font-medium"
+              className={`block py-2 transition-colors font-medium ${
+                isScrolled 
+                  ? 'text-gray-700 hover:text-[#00C742]' 
+                  : 'text-gray-900 hover:text-[#00C742]'
+              }`}
               onClick={() => setIsMenuOpen(false)}
             >
               Тарифы
             </Link>
             <Link 
               href="/#roadmap" 
-              className="block py-2 text-gray-700 hover:text-[#00C742] transition-colors font-medium"
+              className={`block py-2 transition-colors font-medium ${
+                isScrolled 
+                  ? 'text-gray-700 hover:text-[#00C742]' 
+                  : 'text-gray-900 hover:text-[#00C742]'
+              }`}
               onClick={() => setIsMenuOpen(false)}
             >
               Новости
             </Link>
             <Link 
               href="/auth" 
-              className="block py-2 text-gray-700 hover:text-[#00C742] transition-colors font-medium"
+              className={`block py-2 transition-colors font-medium ${
+                isScrolled 
+                  ? 'text-gray-700 hover:text-[#00C742]' 
+                  : 'text-gray-900 hover:text-[#00C742]'
+              }`}
               onClick={() => setIsMenuOpen(false)}
             >
               Войти
             </Link>
             <Link
-              href="/register"
+              href="http://localhost:7001/register"
               className="block mt-4 px-6 py-2 bg-[#00C742] text-white font-bold rounded-full text-center transition-all duration-300 hover:bg-[#00B36C]"
               onClick={() => setIsMenuOpen(false)}
             >

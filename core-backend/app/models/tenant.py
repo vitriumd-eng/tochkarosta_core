@@ -1,39 +1,27 @@
-"""
-Tenant SQLAlchemy Model
-"""
 from __future__ import annotations
-from sqlalchemy import Column, String, Text, DateTime, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
+from typing import TYPE_CHECKING, List
 import uuid
-from datetime import datetime
-from typing import TYPE_CHECKING
-from app.db.base import Base
+from sqlalchemy import String, Boolean
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from app.core.db import Base, TimestampMixin, SoftDeleteMixin
 
 if TYPE_CHECKING:
     from app.models.user import User
-    from app.models.subscription import Subscription
-    from app.models.tenant_domain import TenantDomain
+    from app.modules.billing.models import Subscription
 
-
-class Tenant(Base):
-    """Tenant SQLAlchemy model"""
+class Tenant(Base, TimestampMixin, SoftDeleteMixin):
     __tablename__ = "tenants"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    name = Column(Text, nullable=False)
-    owner_phone = Column(String(20), nullable=False)
-    plan = Column(Text, nullable=True)  # NULL until module is activated
-    status = Column(Text, default="inactive", nullable=False)  # inactive until module is activated
-    active_module = Column(Text, nullable=True)  # NULL until module is selected
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-
-    # Relationships
-    users = relationship("User", back_populates="tenant", cascade="all, delete-orphan")
-    subscriptions = relationship("Subscription", back_populates="tenant", cascade="all, delete-orphan")
-    domains = relationship("TenantDomain", back_populates="tenant", cascade="all, delete-orphan")
-
-    def __repr__(self):
-        return f"<Tenant(id={self.id}, name={self.name}, status={self.status})>"
-
-
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String, index=True) 
+    
+    # Critical for Gateway
+    domain: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
+    owner_phone: Mapped[str] = mapped_column(String(20))
+    
+    status: Mapped[str] = mapped_column(String(20), default="active")
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    
+    users: Mapped[List["User"]] = relationship("User", back_populates="tenant")
+    subscription: Mapped["Subscription"] = relationship("Subscription", back_populates="tenant", uselist=False)

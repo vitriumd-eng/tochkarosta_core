@@ -1,44 +1,34 @@
-"""
-User SQLAlchemy Model
-"""
 from __future__ import annotations
-from sqlalchemy import Column, String, Boolean, Enum as SQLEnum, DateTime, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
+from typing import TYPE_CHECKING, Optional
 import uuid
-from datetime import datetime
-from typing import TYPE_CHECKING
-from app.db.base import Base
-from app.models.roles import UserRole
+from sqlalchemy import String, Boolean, ForeignKey
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from app.core.db import Base, TimestampMixin, SoftDeleteMixin
 
 if TYPE_CHECKING:
     from app.models.tenant import Tenant
 
-
-class User(Base):
-    """User SQLAlchemy model"""
+class User(Base, TimestampMixin, SoftDeleteMixin):
     __tablename__ = "users"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=True)
-    phone = Column(String(20), unique=True, nullable=True)  # Nullable for VK OAuth users
-    phone_verified = Column(Boolean, default=False, nullable=False)
-    password_hash = Column(String, nullable=True)  # For platform_master login/password auth
-    # Temporarily use String instead of Enum to avoid database type issues
-    # role = Column(SQLEnum(UserRole, values_callable=lambda x: [e.value for e in x]), nullable=True)
-    role = Column(String(20), nullable=True)  # Store role as string: 'super_admin', 'platform_master', 'user', 'subscriber', 'buyer'
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     
-    # OAuth provider fields
-    auth_provider = Column(String(20), nullable=True)  # 'telegram', 'max', 'vk'
-    tg_user_id = Column(String(255), nullable=True)
-    max_user_id = Column(String(255), nullable=True)
-    vk_id = Column(String(255), nullable=True)
+    # Phone is ID
+    phone: Mapped[str] = mapped_column(String(20), unique=True, index=True, nullable=False)
+    phone_verified: Mapped[bool] = mapped_column(Boolean, default=False)
+    
+    # Password (Required for No-SMS flow)
+    password_hash: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    
+    # Profile
+    first_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    last_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    employment_type: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    
+    role: Mapped[str] = mapped_column(String(20), default="subscriber")
+    is_superuser: Mapped[bool] = mapped_column(Boolean, default=False)
 
-    # Relationships
-    tenant = relationship("Tenant", back_populates="users")
-
-    def __repr__(self):
-        return f"<User(id={self.id}, phone={self.phone}, role={self.role})>"
-
-
+    # Relationship
+    tenant_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=True)
+    tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="users")

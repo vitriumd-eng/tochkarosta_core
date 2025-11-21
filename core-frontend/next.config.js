@@ -1,39 +1,59 @@
-const path = require('path')
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // Port configuration handled by package.json scripts
-  // Port 7000: public platform
-  // Port 7001: auth + dashboard
-  // Port 7002: super-admin
-  
-  // Use different dist directories for different ports to avoid conflicts
+  // Use distDir from environment variable, default to .next
   distDir: process.env.NEXT_DIST_DIR || '.next',
-  
-  // TypeScript: modules are separate projects, loaded dynamically
-  // Module type checking errors should not block core build
-  // Modules are excluded from tsconfig.json and webpack resolves them at runtime only
-  typescript: {
-    ignoreBuildErrors: false,
-    tsconfigPath: './tsconfig.json',
+  // Enable modern JavaScript output for better browser support
+  swcMinify: true,
+  // Compiler options for better cross-browser compatibility
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
   },
-  
-  // Configure webpack to resolve modules from project root
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://localhost:8000/api/:path*',
+      },
+    ]
+  },
   webpack: (config, { isServer }) => {
-    // Add modules directory to webpack resolve for runtime dynamic imports
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      '@modules': path.resolve(__dirname, '../modules'),
+    // Add polyfills for better cross-browser support
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      }
     }
     
-    // Add project root to modules resolution
-    config.resolve.modules = [
-      ...(config.resolve.modules || []),
-      path.resolve(__dirname, '..'),
-    ]
-    
+    config.resolve.alias = {
+      ...config.resolve.alias,
+    }
     return config
+  },
+  // Headers for better cross-browser compatibility
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block',
+          },
+        ],
+      },
+    ]
   },
 }
 
