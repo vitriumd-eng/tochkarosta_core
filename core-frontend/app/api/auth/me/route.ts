@@ -20,6 +20,8 @@ export async function GET(request: NextRequest) {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
+        // Добавляем обработку ошибок сети
+        signal: AbortSignal.timeout(10000), // 10 секунд таймаут
       })
       
       const data = await response.json()
@@ -49,4 +51,5 @@ export async function GET(request: NextRequest) {
     )
   }
 }
+
 

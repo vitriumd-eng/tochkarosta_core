@@ -110,29 +110,6 @@ export default function RegisterForm() {
     }
   }
 
-
-  const normalizePhone = (phone: string): string => {
-    // Удаляем все пробелы и дефисы
-    let normalized = phone.replace(/[\s\-]/g, '')
-    
-    // Убираем +7, 7, 8 в начале
-    if (normalized.startsWith('+7')) {
-      normalized = normalized.substring(2)
-    } else if (normalized.startsWith('7')) {
-      normalized = normalized.substring(1)
-    } else if (normalized.startsWith('8')) {
-      normalized = normalized.substring(1)
-    }
-    
-    // Проверяем, что осталось 10 цифр
-    if (normalized.length === 10 && /^\d+$/.test(normalized)) {
-      return `+7${normalized}`
-    }
-    
-    // Если не удалось нормализовать, возвращаем как есть
-    return phone
-  }
-
   const handleLogin = async () => {
     if (!password) {
       setError('Введите пароль')

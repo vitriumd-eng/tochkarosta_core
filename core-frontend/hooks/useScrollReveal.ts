@@ -49,3 +49,7 @@ export const useScrollReveal = (options: UseScrollRevealOptions = {}) => {
   return { elementRef, isVisible }
 }
 
+
+
+
+

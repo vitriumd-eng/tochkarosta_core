@@ -140,3 +140,7 @@ pg_dump -U postgres core_db > backup_$(date +%Y%m%d).sql
 
 
 
+
+
+
+

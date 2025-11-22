@@ -3,12 +3,12 @@ const nextConfig = {
   reactStrictMode: true,
   // Use distDir from environment variable, default to .next
   distDir: process.env.NEXT_DIST_DIR || '.next',
-  // Enable modern JavaScript output for better browser support
-  swcMinify: true,
   // Compiler options for better cross-browser compatibility
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
+  // Turbopack configuration (Next.js 16+)
+  turbopack: {},
   async rewrites() {
     return [
       {
@@ -54,6 +54,17 @@ const nextConfig = {
         ],
       },
     ]
+  },
+  // Image optimization configuration
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        port: '',
+        pathname: '/**',
+      },
+    ],
   },
 }
 

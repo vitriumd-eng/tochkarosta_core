@@ -10,6 +10,7 @@ from app.core.health import router as health_router
 from app.modules.auth.routes import router as auth_router
 from app.modules.tenants.routes import router as tenants_router
 from app.modules.billing.routes import router as billing_router
+from app.modules.chat import router as chat_router
 
 # Настройка логирования
 logger = setup_logging()
@@ -53,6 +54,7 @@ app.include_router(health_router, tags=["Health"])
 app.include_router(auth_router, prefix="/api/auth", tags=["Auth"])
 app.include_router(tenants_router, prefix="/api/tenants", tags=["Tenants"])
 app.include_router(billing_router, prefix="/api/billing", tags=["Billing"])
+app.include_router(chat_router, tags=["Chat"])
 
 if __name__ == "__main__":
     import uvicorn

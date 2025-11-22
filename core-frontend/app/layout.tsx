@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -7,12 +7,6 @@ export const metadata: Metadata = {
   icons: {
     icon: '/icon.svg',
   },
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 5,
-  },
-  themeColor: '#00C742',
   other: {
     'mobile-web-app-capable': 'yes',
     'apple-mobile-web-app-capable': 'yes',
@@ -20,6 +14,13 @@ export const metadata: Metadata = {
   },
   // Cross-browser compatibility
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:7000'),
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: '#00C742',
 }
 
 export default function RootLayout({

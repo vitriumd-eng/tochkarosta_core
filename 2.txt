@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Композиция: Светлая Стеклянная Волна</title>
+    <style>
+        /* Меняем фон страницы на белый/светло-серый, как на вашем макете */
+        body { margin: 0; overflow: hidden; background-color: #f5f5f5; }
+        #info {
+            position: absolute;
+            top: 10px;
+            width: 100%;
+            text-align: center;
+            color: #333333; /* Темный текст для светлого фона */
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 14px;
+            font-weight: 100;
+            letter-spacing: 3px;
+            pointer-events: none;
+            text-transform: uppercase;
+            z-index: 10;
+        }
+        canvas { display: block; outline: none; }
+    </style>
+</head>
+<body>
+    <div id="info">Composition: Glass Wave (Light)</div>
+    
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+        const scene = new THREE.Scene();
+        
+        // ВАЖНО: Убираем черный фон сцены, чтобы работал alpha-канал (прозрачность)
+        // scene.background = new THREE.Color(0x050505); 
+        scene.background = null; 
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(0, 0, 14); 
+
+        // ВАЖНО: alpha: true делает холст прозрачным
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.toneMapping = THREE.ACESFilmicToneMapping; 
+        renderer.toneMappingExposure = 1.2; // Чуть ярче экспозиция
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.body.appendChild(renderer.domElement);
+
+        // Окружение для отражений (важно для стекла)
+        const pmremGenerator = new THREE.PMREMGenerator(renderer);
+        scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        
+        // --- МАТЕРИАЛ СТЕКЛА ---
+        const boardMaterial = new THREE.MeshPhysicalMaterial({
+            color: 0xffffff,        // Белый базовый цвет
+            roughness: 0.05,        // Чуть-чуть шероховатости для реализма бликов
+            metalness: 0.1,         // Немного металла для контраста отражений
+            transmission: 1.0,      // Полная прозрачность
+            thickness: 1.5,         // Увеличили толщину для более заметного преломления света
+            ior: 2.0,               // Высокий коэффициент преломления (как у хрусталя) для игры граней
+            
+            clearcoat: 1.0,
+            clearcoatRoughness: 0.0,
+            
+            iridescence: 0.8,       // Сильная иризация, чтобы видеть объект на белом фоне
+            iridescenceIOR: 1.8,    
+            iridescenceThicknessRange: [100, 800], 
+            
+            side: THREE.DoubleSide
+        });
+
+        const panelWidth = 0.5;
+        const panelHeight = 6.0;
+        const panelThickness = 0.3;
+        const cornerRadius = 0.05;
+        const bendDepth = 0.3; 
+
+        // 1. Создаем путь для экструзии
+        const curve = new THREE.CatmullRomCurve3([
+            new THREE.Vector3(0, -panelHeight / 2, bendDepth),
+            new THREE.Vector3(0, 0, 0),
+            new THREE.Vector3(0, panelHeight / 2, bendDepth)
+        ]);
+
+        // 2. Создаем форму 
+        const shape = new THREE.Shape();
+        const w = panelWidth / 2;
+        const t = panelThickness / 2;
+
+        shape.moveTo(-w + cornerRadius, -t);
+        shape.lineTo(w - cornerRadius, -t);
+        shape.quadraticCurveTo(w, -t, w, -t + cornerRadius);
+        shape.lineTo(w, t - cornerRadius);
+        shape.quadraticCurveTo(w, t, w - cornerRadius, t);
+        shape.lineTo(-w + cornerRadius, t);
+        shape.quadraticCurveTo(-w, t, -w, t - cornerRadius);
+        shape.lineTo(-w, -t + cornerRadius);
+        shape.quadraticCurveTo(-w, -t, -w + cornerRadius, -t);
+
+        // 3. Настройки экструзии
+        const extrudeSettings = {
+            steps: 30, 
+            bevelEnabled: false, 
+            extrudePath: curve
+        };
+
+        const boardGeometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+        boardGeometry.center();
+        
+        const totalBoards = 12;
+        const startX = 2.5; 
+
+        for (let i = 0; i < totalBoards; i++) {
+            const board = new THREE.Mesh(boardGeometry, boardMaterial);
+            
+            // Рассчитываем позицию
+            const xPos = startX - (i * panelWidth);
+            
+            board.position.set(xPos, 0, 1.0); 
+            board.castShadow = true;
+            board.receiveShadow = true; // Стекло может принимать тени от соседей
+            
+            scene.add(board);
+        }
+
+        // --- ОСВЕЩЕНИЕ ---
+        // На белом фоне свет должен быть ярче и контрастнее
+        const spotLight = new THREE.SpotLight(0xffffff, 200);
+        spotLight.position.set(10, 20, 15);
+        spotLight.angle = Math.PI / 6;
+        spotLight.penumbra = 1;
+        spotLight.castShadow = true;
+        spotLight.shadow.bias = -0.0001;
+        scene.add(spotLight);
+
+        const fillLight = new THREE.PointLight(0xccddff, 100); 
+        fillLight.position.set(-10, 0, 10);
+        scene.add(fillLight);
+
+        const backLight = new THREE.DirectionalLight(0xffaa00, 2); // Теплый контровой свет
+        backLight.position.set(0, 10, -10);
+        scene.add(backLight);
+
+        // --- АНИМАЦИЯ ---
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        animate();
+    </script>
+</body>
+</html>
+
+
+
+Скролл
+
+Короткий ответ: Да, можно, но есть одно условие.
+
+Вам не нужно писать строки container.style.scrollBehavior = 'auto', если у вас в глобальных стилях (CSS) не задана плавная прокрутка.
+
+Как это работает
+Конфликт, о котором я писал, возникает только если в вашем CSS файле (или в настройках Tailwind) есть такой код:
+
+CSS
+
+html {
+  scroll-behavior: smooth;
+}
+(Или класс scroll-smooth на теге html/body).
+
+Если этот стиль есть, браузер пытается "сглаживать" любые движения.
+
+Два варианта решения
+Вариант 1. Удалить плавность из CSS (Самый "чистый" вариант)
+Если вы удалите scroll-behavior: smooth из своего CSS-файла, то браузер перестанет вмешиваться. Скролл станет "мгновенным" по умолчанию.
+
+Тогда ваша JS-функция будет работать идеально без строк отключения стиля.
+
+Плюсы:
+
+Код функции становится чище (минус 2 строки).
+
+Никаких конфликтов.
+
+Минусы:
+
+Обычные ссылки-якоря (например, <a href="#contact">) станут работать резко (мгновенный прыжок), если вы не повесите на них свой JS-скрипт.
+
+Вариант 2. Оставить плавность в CSS (Гибридный вариант)
+Если вы хотите, чтобы обычные ссылки на сайте работали плавно "сами по себе" (через CSS), но для особых случаев (например, кнопка "Hero") использовать JS-анимацию, то вам придется использовать тот "костыль" с отключением стиля на лету.
+
+Резюме
+Если вы готовы полностью управлять скроллом через JS — просто удалите scroll-behavior: smooth из CSS. Тогда код функции упростится до такого:
+
+JavaScript
+
+// Упрощенная версия (работает ТОЛЬКО если в CSS нет scroll-behavior: smooth)
+const customDurationScroll = (targetRef, duration = 3000) => {
+  const target = targetRef.current;
+  const startPos = window.scrollY;
+  const targetRect = target.getBoundingClientRect();
+  
+  // Просто считаем дистанцию
+  const distance = targetRect.top + (target.clientHeight / 2) - (window.innerHeight / 2);
+
+  let startTime = null;
+
+  const animation = (currentTime) => {
+    if (!startTime) startTime = currentTime;
+    const timeElapsed = currentTime - startTime;
+    
+    const ease = (t, b, c, d) => { /* ... код easing ... */ };
+    
+    // Просто двигаем, не думая о стилях
+    window.scrollTo(0, ease(timeElapsed, startPos, distance, duration));
+
+    if (timeElapsed < duration) {
+      requestAnimationFrame(animation);
+    } else {
+       // Финиш
+       window.scrollTo(0, startPos + distance);
+    }
+  };
+
+  requestAnimationFrame(animation);
+};
+
+
+/**
+ * Easing-функция (Ease-In-Out Quad)
+ * Обеспечивает плавный разгон и торможение анимации.
+ */
+const easeInOutQuad = (t: number, b: number, c: number, d: number): number => {
+  t /= d / 2;
+  if (t < 1) return c / 2 * t * t + b;
+  t--;
+  return -c / 2 * (t * (t - 2) - 1) + b;
+};
+
+interface ScrollOptions {
+  duration?: number;       // Длительность в мс (по умолчанию 1000)
+  offset?: number;         // Смещение от центра (опционально)
+  container?: HTMLElement | Window | null; // Контейнер скролла (по умолчанию window)
+  onComplete?: () => void; // Коллбек после завершения
+}
+
+/**
+ * Универсальная функция плавного скролла.
+ * * @param target - Целевой элемент (DOM узел), к которому нужно прокрутить.
+ * @param options - Настройки скролла.
+ */
+export const smoothScrollTo = (
+  target: HTMLElement | null,
+  options: ScrollOptions = {}
+) => {
+  // Настройки по умолчанию
+  const { 
+    duration = 1000, 
+    offset = 0, 
+    container = typeof window !== 'undefined' ? window : null,
+    onComplete 
+  } = options;
+
+  if (!target || !container) return;
+
+  // 1. Определяем, скроллим мы окно или отдельный блок
+  const isWindow = container === window || container === document.documentElement || container === document.body;
+  const containerEl = isWindow ? document.documentElement : (container as HTMLElement);
+
+  // 2. --- FIX: Временно отключаем CSS scroll-behavior ---
+  // Это предотвращает конфликты и "дергания", если в CSS задана плавная прокрутка.
+  const originalScrollBehavior = containerEl.style.scrollBehavior;
+  containerEl.style.scrollBehavior = 'auto';
+
+  // 3. Начальная позиция
+  const startPos = isWindow ? window.scrollY : containerEl.scrollTop;
+
+  // 4. --- FIX: Правильная математика координат ---
+  const targetRect = target.getBoundingClientRect();
+  // Для window отступ сверху всегда 0, для div берем его реальную позицию
+  const containerRectTop = isWindow ? 0 : containerEl.getBoundingClientRect().top;
+  const containerHeight = isWindow ? window.innerHeight : containerEl.clientHeight;
+
+  // Смещение элемента относительно верха контейнера
+  const relativeTargetTop = targetRect.top - containerRectTop;
+
+  // Формула центрирования:
+  // (Координата элемента) + (Половина элемента) - (Половина экрана) + (Доп. смещение)
+  const distance = relativeTargetTop + (target.clientHeight / 2) - (containerHeight / 2) + offset;
+
+  // Если скроллить некуда (дистанция < 1px), завершаем сразу
+  if (Math.abs(distance) < 1) {
+    containerEl.style.scrollBehavior = originalScrollBehavior;
+    if (onComplete) onComplete();
+    return;
+  }
+
+  let startTime: number | null = null;
+
+  // 5. Анимационный цикл
+  const animation = (currentTime: number) => {
+    if (startTime === null) startTime = currentTime;
+    const timeElapsed = currentTime - startTime;
+
+    // Вычисляем новую позицию
+    const nextScrollTop = easeInOutQuad(timeElapsed, startPos, distance, duration);
+
+    // Двигаем
+    if (isWindow) {
+      window.scrollTo(0, nextScrollTop);
+    } else {
+      containerEl.scrollTop = nextScrollTop;
+    }
+
+    if (timeElapsed < duration) {
+      requestAnimationFrame(animation);
+    } else {
+      // Финиш: ставим точную конечную точку
+      const finalPos = startPos + distance;
+      if (isWindow) window.scrollTo(0, finalPos);
+      else containerEl.scrollTop = finalPos;
+
+      // --- FIX: Возвращаем исходный CSS стиль ---
+      containerEl.style.scrollBehavior = originalScrollBehavior;
+      
+      if (onComplete) onComplete();
+    }
+  };
+
+  requestAnimationFrame(animation);
+};

@@ -1,48 +1,64 @@
-/**
- * Platform Page - Public entry point
- * Design based on D:\tochkarosta_core — копия\core-frontend\app\page.tsx
- * Visual design recreated 1:1 with clean modern code for App Router
- * 
- * Правила переноса:
- * - Только UI (дизайн, верстка, Tailwind классы)
- * - Компоненты модульные в components/platform/
- * - Интерактивные компоненты имеют 'use client'
- * - Главная страница серверная (без 'use client')
- */
+import type { Metadata } from 'next'
 import { Header } from '@/components/platform/Header'
 import { Hero } from '@/components/platform/Hero'
-import { HeroMedia } from '@/components/platform/HeroMedia'
-import { FeaturesPreview } from '@/components/platform/FeaturesPreview'
-import { Stats } from '@/components/platform/Stats'
-import { BusinessScale } from '@/components/platform/BusinessScale'
-import { StatsFeaturesBridge } from '@/components/platform/StatsFeaturesBridge'
+import { WhatIsUSD } from '@/components/platform/WhatIsUSD'
 import { Features } from '@/components/platform/Features'
-import { WhyChoose } from '@/components/platform/WhyChoose'
-import { Pricing } from '@/components/platform/Pricing'
-import { Roadmap } from '@/components/platform/Roadmap'
-import { CTA } from '@/components/platform/CTA'
+import { BentoGrid } from '@/components/platform/BentoGrid'
+import { Possibilities } from '@/components/platform/Possibilities'
+import { TargetAudience } from '@/components/platform/TargetAudience'
+import dynamic from 'next/dynamic'
+import { RoadMap } from '@/components/platform/Roadmap'
+import { BusinessSolutions } from '@/components/platform/BusinessSolutions'
+import { AboutPlatform } from '@/components/platform/AboutPlatform'
+import { OurTeam } from '@/components/platform/OurTeam'
+import { ContactForm } from '@/components/platform/ContactForm'
 import { Footer } from '@/components/platform/Footer'
+import { ScrollHandler } from '@/components/platform/ScrollHandler'
+
+// Lazy load тяжелых компонентов
+const ChatBlog = dynamic(() => import('@/components/platform/ChatBlog').then(mod => ({ default: mod.ChatBlog })), {
+  loading: () => <div className="py-20 bg-white"><div className="text-center">Загрузка...</div></div>
+})
+
+const Reviews = dynamic(() => import('@/components/platform/Reviews').then(mod => ({ default: mod.Reviews })), {
+  loading: () => <div className="py-20 bg-[#FAFAFA]"><div className="text-center">Загрузка...</div></div>
+})
+
+export const metadata: Metadata = {
+  title: 'Точка.Роста - Платформа для цифрового бизнеса',
+  description: 'Запустите свой бизнес за 60 секунд без программирования. Готовые модули для интернет-магазинов, портфолио, мероприятий и других цифровых бизнесов.',
+  keywords: ['цифровой бизнес', 'интернет-магазин', 'платформа', 'бизнес за 60 секунд', 'готовые модули', 'Точка.Роста'],
+  openGraph: {
+    title: 'Точка.Роста - Платформа для цифрового бизнеса',
+    description: 'Запустите свой бизнес за 60 секунд без программирования',
+    type: 'website',
+    siteName: 'Точка.Роста',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Точка.Роста - Платформа для цифрового бизнеса',
+    description: 'Запустите свой бизнес за 60 секунд без программирования',
+  },
+}
 
 export default async function PlatformPage() {
   return (
-    <div 
-      className="min-h-screen bg-white relative platform-page"
-      style={{ 
-        fontFamily: "'PF BeauSans Pro', 'Montserrat', sans-serif"
-      }}
-    >
+    <div className="min-h-screen bg-[#FAFAFA] font-sans selection:bg-indigo-100">
+      <ScrollHandler />
       <Header />
       <Hero />
-      <StatsFeaturesBridge />
-      <HeroMedia />
-      <FeaturesPreview />
-      <Stats />
-      <Roadmap />
+      <WhatIsUSD />
       <Features />
-      <WhyChoose />
-      <Pricing />
-      <Roadmap />
-      <CTA />
+      <TargetAudience />
+      <Possibilities />
+      <ChatBlog />
+      <BusinessSolutions />
+      <RoadMap />
+      <AboutPlatform />
+      <OurTeam />
+      <Reviews />
+      <ContactForm />
+      <BentoGrid />
       <Footer />
     </div>
   )

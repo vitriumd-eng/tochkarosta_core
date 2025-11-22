@@ -1,0 +1,181 @@
+import React, { useState, useEffect } from 'react';
+import { TrendingUp, Wallet, Clock, ArrowUpRight, ArrowRight } from 'lucide-react';
+
+const StatsSection = () => {
+  const [isVisible, setIsVisible] = useState(false);
+
+  // Эффект появления при скролле
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) setIsVisible(true);
+      },
+      { threshold: 0.2 }
+    );
+    const section = document.getElementById('stats-section');
+    if (section) observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <section id="stats-section" className="py-32 bg-white overflow-hidden">
+      <div className="max-w-[1200px] mx-auto px-6">
+        
+        <div className="text-center mb-20 max-w-3xl mx-auto">
+          <h2 className="text-4xl md:text-6xl font-semibold text-[#1D1D1F] mb-6">
+            Математика в вашу пользу.
+          </h2>
+          <p className="text-xl text-gray-500">
+            Мы посчитали, сколько ресурсов освобождает платформа. Результаты говорят сами за себя.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-12 items-stretch">
+          
+          {/* График 1: Рост выручки (Line Chart) */}
+          <div className="bg-[#F5F5F7] rounded-[2.5rem] p-10 flex flex-col relative group overflow-hidden border border-transparent hover:border-gray-200 transition-all duration-500">
+             <div className="flex justify-between items-start mb-8 relative z-10">
+               <div>
+                 <div className="flex items-center gap-2 text-gray-500 font-medium mb-2">
+                   <TrendingUp size={20} className="text-emerald-500"/>
+                   <span>Рост конверсии</span>
+                 </div>
+                 <div className="text-4xl font-semibold text-[#1D1D1F]">
+                   +320%
+                   <span className="text-lg text-gray-400 ml-2 font-normal">за полгода</span>
+                 </div>
+               </div>
+               <div className="bg-white p-3 rounded-full shadow-sm">
+                 <ArrowUpRight size={24} className="text-black"/>
+               </div>
+             </div>
+
+             {/* SVG Chart Area */}
+             <div className="mt-auto h-64 w-full relative">
+                <svg viewBox="0 0 100 50" className="w-full h-full overflow-visible preserve-3d">
+                   {/* Grid lines */}
+                   <line x1="0" y1="0" x2="100" y2="0" stroke="#E5E5E5" strokeWidth="0.5" strokeDasharray="2"/>
+                   <line x1="0" y1="25" x2="100" y2="25" stroke="#E5E5E5" strokeWidth="0.5" strokeDasharray="2"/>
+                   <line x1="0" y1="50" x2="100" y2="50" stroke="#E5E5E5" strokeWidth="0.5" strokeDasharray="2"/>
+                   
+                   {/* The Line Path */}
+                   <defs>
+                     <linearGradient id="gradient" x1="0" x2="0" y1="0" y2="1">
+                       <stop offset="0%" stopColor="#10B981" stopOpacity="0.2"/>
+                       <stop offset="100%" stopColor="#10B981" stopOpacity="0"/>
+                     </linearGradient>
+                   </defs>
+                   <path 
+                     d="M0,45 C20,45 30,35 50,25 C70,15 80,10 100,5" 
+                     fill="url(#gradient)" 
+                     stroke="none"
+                     className={`transition-all duration-[2000ms] ease-out ${isVisible ? 'opacity-100' : 'opacity-0 translate-y-4'}`}
+                   />
+                   <path 
+                     d="M0,45 C20,45 30,35 50,25 C70,15 80,10 100,5" 
+                     fill="none" 
+                     stroke="#10B981" 
+                     strokeWidth="1.5" 
+                     strokeLinecap="round"
+                     className={`transition-all duration-[2000ms] ease-out ${isVisible ? 'path-draw' : ''}`}
+                     style={{ strokeDasharray: 120, strokeDashoffset: isVisible ? 0 : 120 }}
+                   />
+                   
+                   {/* Points */}
+                   <circle cx="0" cy="45" r="1.5" fill="white" stroke="#10B981" strokeWidth="1"/>
+                   <circle cx="50" cy="25" r="1.5" fill="white" stroke="#10B981" strokeWidth="1"/>
+                   <circle cx="100" cy="5" r="2" fill="#10B981" className="animate-pulse"/>
+                </svg>
+                
+                {/* Labels along X axis */}
+                <div className="flex justify-between text-xs text-gray-400 mt-4">
+                  <span>Старт</span>
+                  <span>3 мес</span>
+                  <span>Сейчас</span>
+                </div>
+             </div>
+          </div>
+
+          {/* График 2: Сравнение затрат (Bar Chart) */}
+          <div className="bg-[#1D1D1F] text-white rounded-[2.5rem] p-10 flex flex-col relative overflow-hidden group">
+            <div className="flex justify-between items-start mb-12 relative z-10">
+               <div>
+                 <div className="flex items-center gap-2 text-gray-400 font-medium mb-2">
+                   <Wallet size={20} className="text-blue-500"/>
+                   <span>Экономия на запуске</span>
+                 </div>
+                 <div className="text-4xl font-semibold">
+                   145 000 ₽
+                   <span className="text-lg text-gray-500 ml-2 font-normal">в среднем</span>
+                 </div>
+               </div>
+            </div>
+
+            <div className="mt-auto space-y-6 relative z-10">
+              {/* Bar 1: Traditional Agency */}
+              <div>
+                <div className="flex justify-between text-sm text-gray-400 mb-2">
+                  <span>Агентство + Разработка</span>
+                  <span>~150 000 ₽</span>
+                </div>
+                <div className="h-4 w-full bg-white/10 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full bg-gradient-to-r from-gray-500 to-gray-400 rounded-full transition-all duration-1000 delay-300 ${isVisible ? 'w-full' : 'w-0'}`}
+                  ></div>
+                </div>
+              </div>
+
+              {/* Bar 2: Точка Роста */}
+              <div>
+                <div className="flex justify-between text-sm text-emerald-400 mb-2 font-medium">
+                  <span>Точка Роста (Старт)</span>
+                  <span>5 000 ₽</span>
+                </div>
+                <div className="h-4 w-full bg-white/10 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-1000 delay-500 ${isVisible ? 'w-[3.3%]' : 'w-0'}`}
+                    style={{ minWidth: '10px' }} 
+                  ></div>
+                </div>
+                <div className="text-xs text-gray-500 mt-2 text-right">
+                   * Выгода в 30 раз
+                </div>
+              </div>
+            </div>
+
+            {/* Background decoration */}
+            <div className="absolute -right-20 -bottom-40 w-80 h-80 bg-blue-600/20 rounded-full blur-[100px]"></div>
+          </div>
+
+          {/* Карточка 3: Время (Маленькая) */}
+          <div className="md:col-span-2 bg-white border border-gray-100 rounded-[2rem] p-8 shadow-xl shadow-gray-200/50 flex flex-col md:flex-row items-center gap-8">
+             <div className="bg-orange-50 p-4 rounded-full text-orange-500">
+               <Clock size={32} />
+             </div>
+             <div className="flex-1">
+               <h3 className="text-2xl font-semibold text-[#1D1D1F] mb-2">Больше времени на жизнь.</h3>
+               <p className="text-gray-500">
+                 Самозанятые тратят до 30% времени на рутину (переписки, согласования). 
+                 С Точкой Роста это время сводится к нулю.
+               </p>
+             </div>
+             <div className="flex items-center gap-4 pr-4">
+               <div className="text-center">
+                 <div className="text-sm text-gray-400 uppercase tracking-wider mb-1">Было</div>
+                 <div className="text-2xl font-bold text-gray-300 line-through">4ч/день</div>
+               </div>
+               <ArrowRight className="text-gray-300"/>
+               <div className="text-center">
+                 <div className="text-sm text-emerald-600 font-bold uppercase tracking-wider mb-1">Стало</div>
+                 <div className="text-4xl font-bold text-[#1D1D1F]">15 мин</div>
+               </div>
+             </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default StatsSection;
